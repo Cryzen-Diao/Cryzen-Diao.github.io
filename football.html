@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>足球球队查询 | 实时赛程+积分榜 | 数据独立管理</title>
+    <style>
+        /* 样式与之前相同，为节省篇幅，此处省略，复制之前的样式即可 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui; background: linear-gradient(145deg, #1a472a 0%, #0e2a1a 100%); min-height: 100vh; padding: 2rem 1rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 2rem; }
+        .header h1 { font-size: 2.5rem; color: #ffd966; }
+        .subtitle { color: #e0e0e0; margin-top: 0.5rem; }
+        .search-area { background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border-radius: 60px; padding: 0.5rem; display: flex; gap: 0.5rem; max-width: 650px; margin: 0 auto 1.5rem auto; }
+        .search-input { flex: 1; background: white; border: none; border-radius: 50px; padding: 0.9rem 1.5rem; font-size: 1rem; outline: none; }
+        .search-input:focus { box-shadow: 0 0 0 3px #ffd966; }
+        .search-btn { background: #ffd966; border: none; border-radius: 50px; padding: 0 1.8rem; font-weight: bold; color: #1a472a; cursor: pointer; }
+        .result-area { background: rgba(255,255,255,0.92); border-radius: 32px; padding: 1.5rem; min-height: 400px; }
+        .team-card { background: white; border-radius: 28px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-left: 8px solid #ffd966; margin-bottom: 1.5rem; }
+        .team-name { font-size: 1.8rem; font-weight: 800; background: #f9f9f9; padding: 1rem 1.5rem; border-bottom: 2px solid #eee; }
+        .team-details { padding: 1.2rem 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .detail-item { display: flex; gap: 8px; border-bottom: 1px dashed #ddd; padding-bottom: 0.5rem; }
+        .detail-label { font-weight: 700; color: #2c5a2e; min-width: 85px; }
+        .extra-section { margin-top: 1.5rem; border-top: 2px solid #eee; padding-top: 1rem; }
+        .section-title { font-size: 1.2rem; font-weight: bold; color: #1a472a; margin-bottom: 1rem; }
+        .fixture-item { background: #f5f5f5; padding: 0.8rem; margin-bottom: 0.8rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .fixture-date { font-size: 0.8rem; color: #666; min-width: 100px; }
+        .fixture-teams { font-weight: 600; flex: 1; text-align: center; }
+        .fixture-score { background: #1a472a; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
+        .standings-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .standings-table th, .standings-table td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #eee; }
+        .standings-table th { background: #f0f0f0; }
+        .no-result { text-align: center; padding: 2rem; color: #555; }
+        .quick-teams { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 1.5rem; }
+        .quick-btn { background: rgba(255,255,240,0.2); border: 1px solid #ffd966; color: #ffd966; padding: 6px 14px; border-radius: 40px; cursor: pointer; }
+        .quick-btn:hover { background: #ffd966; color: #1a472a; }
+        .highlight { background-color: #ffd966; color: #1a472a; font-weight: bold; border-radius: 4px; padding: 0 2px; }
+        footer { text-align: center; margin-top: 2rem; color: #ccc; font-size: 0.8rem; }
+        @media (max-width: 650px) { .search-area { flex-direction: column; } .fixture-item { flex-direction: column; gap: 8px; text-align: center; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⚽ 绿茵档案室 🏆</h1>
+        <div class="subtitle">数据独立管理 · 实时赛程 · 积分榜</div>
+    </div>
+
+    <div class="search-area">
+        <input type="text" id="teamInput" class="search-input" 
+               placeholder="输入球队名称或球员..." autocomplete="off" list="teamSuggestions">
+        <button id="searchBtn" class="search-btn">🔍 查询</button>
+    </div>
+    <datalist id="teamSuggestions"></datalist>
+
+    <div class="quick-teams" id="quickTeams"></div>
+
+    <div class="result-area" id="resultArea">
+        <div class="no-result">⚡ 正在加载数据...</div>
+    </div>
+    <footer>数据来自 data.json + API-Football | 免费版每日100次请求</footer>
+</div>
+
+<script>
+    // ==================== API Key 设置 ====================
+    const API_KEY = 'YOUR_API_KEY_HERE';  // 请替换成你自己的 API Key
+
+    // 全局变量，存储从 JSON 加载的球队数据
+    let teamsData = [];
+
+    // ==================== 加载数据文件 ====================
+    async function loadData() {
+        try {
+            const response = await fetch('data.json');
+            if (!response.ok) throw new Error('数据文件加载失败');
+            const data = await response.json();
+            teamsData = data;
+            // 数据加载完成后，初始化页面
+            afterDataLoaded();
+        } catch (error) {
+            console.error('加载数据出错:', error);
+            document.getElementById('resultArea').innerHTML = `
+                <div class="no-result" style="background:#fff3cd; color:#856404;">
+                    ❌ 无法加载 data.json 文件。<br>
+                    请确保 data.json 文件存在于当前目录，并且文件格式正确。
+                </div>`;
+        }
+    }
+
+    // 数据加载完成后的初始化工作
+    function afterDataLoaded() {
+        buildQuickButtons();
+        updateSuggestions(''); // 清空建议
+        // 可选：默认显示一支球队
+        // displayResults('皇家马德里');
+        document.getElementById('resultArea').innerHTML = `
+            <div class="no-result">
+                <div class="emoji">⚡</div>
+                <p>数据加载成功！输入球队名称或球员，查看详细档案和实时数据</p>
+            </div>`;
+    }
+
+    // ==================== 智能搜索 ====================
+    function smartSearch(keyword) {
+        if (!keyword.trim() || !teamsData.length) return [];
+        const keywords = keyword.trim().toLowerCase().split(/\s+/);
+        const scored = teamsData.map(team => {
+            let score = 0;
+            const searchable = [
+                team.name.toLowerCase(),
+                ...(team.aliases || []).map(a => a.toLowerCase()),
+                ...(team.players || []).map(p => p.toLowerCase())
+            ];
+            keywords.forEach(key => {
+                if (searchable.some(field => field.includes(key))) score++;
+            });
+            return { team, score };
+        });
+        return scored.filter(item => item.score > 0).sort((a, b) => b.score - a.score).map(item => item.team);
+    }
+
+    function highlightText(text, keywords) {
+        if (!keywords || keywords.length === 0) return text;
+        let result = text;
+        keywords.forEach(keyword => {
+            const regex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            result = result.replace(regex, `<span class="highlight">$1</span>`);
+        });
+        return result;
+    }
+
+    // ==================== API 调用函数（实时数据） ====================
+    async function fetchFixtures(teamName) {
+        if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') {
+            return '<div style="color: red; padding: 1rem;">⚠️ 请先设置你的 API Key！</div>';
+        }
+        try {
+            // 通过球队名称搜索球队ID
+            const searchUrl = `https://v3.football.api-sports.io/teams?search=${encodeURIComponent(teamName)}`;
+            const teamResponse = await fetch(searchUrl, { headers: { 'x-apisports-key': API_KEY } });
+            const teamData = await teamResponse.json();
+            if (!teamData.response || teamData.response.length === 0) return '<div>⚠️ 未找到该球队的实时数据</div>';
+            const actualTeamId = teamData.response[0].team.id;
+
+            const fixturesUrl = `https://v3.football.api-sports.io/fixtures?team=${actualTeamId}&last=5`;
+            const fixturesResponse = await fetch(fixturesUrl, { headers: { 'x-apisports-key': API_KEY } });
+            const fixturesData = await fixturesResponse.json();
+            if (!fixturesData.response || fixturesData.response.length === 0) return '<div>📭 暂无近期赛程数据</div>';
+
+            let html = '<div class="extra-section"><div class="section-title">📅 近期赛程 & 比分</div>';
+            fixturesData.response.forEach(match => {
+                const homeTeam = match.teams.home.name;
+                const awayTeam = match.teams.away.name;
+                const homeScore = match.goals.home !== null ? match.goals.home : '?';
+                const awayScore = match.goals.away !== null ? match.goals.away : '?';
+                const date = new Date(match.fixture.date).toLocaleString('zh-CN');
+                html += `
+                    <div class="fixture-item">
+                        <div class="fixture-date">${date}</div>
+                        <div class="fixture-teams">${homeTeam} vs ${awayTeam}</div>
+                        <div class="fixture-score">${homeScore} - ${awayScore}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            return html;
+        } catch (error) {
+            console.error('获取赛程失败:', error);
+            return '<div>⚠️ 获取赛程失败，请检查网络或API Key</div>';
+        }
+    }
+
+    async function fetchStandings(leagueId, leagueName) {
+        if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') return '';
+        try {
+            const currentSeason = 2024;
+            const standingsUrl = `https://v3.football.api-sports.io/standings?league=${leagueId}&season=${currentSeason}`;
+            const response = await fetch(standingsUrl, { headers: { 'x-apisports-key': API_KEY } });
+            const data = await response.json();
+            if (!data.response || data.response.length === 0) return '<div>📭 暂无积分榜数据</div>';
+            const standings = data.response[0].league.standings[0].slice(0, 8);
+            let html = `<div class="extra-section"><div class="section-title">🏆 ${leagueName} 积分榜 (前8名)</div>
+                        <table class="standings-table"><thead><tr><th>排名</th><th>球队</th><th>场次</th><th>胜</th><th>平</th><th>负</th><th>积分</th></tr></thead><tbody>`;
+            standings.forEach(team => {
+                html += `<tr><td>${team.rank}</td><td>${team.team.name}</td><td>${team.all.played}</td><td>${team.all.win}</td><td>${team.all.draw}</td><td>${team.all.lose}</td><td><strong>${team.points}</strong></td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            return html;
+        } catch (error) {
+            console.error('获取积分榜失败:', error);
+            return '';
+        }
+    }
+
+    // ==================== 渲染球队卡片（异步加载实时数据）====================
+    async function renderTeamCardWithLiveData(team, keywords) {
+        const highlightedName = highlightText(team.name, keywords);
+        const cardId = `team-card-${team.name.replace(/\s/g, '')}`;
+        const liveContainerId = `live-data-${team.name.replace(/\s/g, '')}`;
+        let cardHtml = `
+            <div class="team-card" id="${cardId}">
+                <div class="team-name">⚽ ${highlightedName}</div>
+                <div class="team-details">
+                    <div class="detail-item"><span class="detail-label">🏆 所属联赛：</span><span>${team.league}</span></div>
+                    <div class="detail-item"><span class="detail-label">📅 成立年份：</span><span>${team.founded}</span></div>
+                    <div class="detail-item"><span class="detail-label">🏟️ 主场球场：</span><span>${team.stadium}</span></div>
+                    <div class="detail-item"><span class="detail-label">✨ 主要荣誉：</span><span>${team.honors}</span></div>
+                    <div class="detail-item"><span class="detail-label">⭐ 核心球星：</span><span>${team.star}</span></div>
+                </div>
+                <div id="${liveContainerId}" class="live-data-container"></div>
+            </div>
+        `;
+        return { cardHtml, cardId, liveContainerId, team };
+    }
+
+    async function loadLiveDataForTeam(team, liveContainerId) {
+        const container = document.getElementById(liveContainerId);
+        if (!container) return;
+        container.innerHTML = '<div style="padding: 0 1.5rem 1rem;">🔄 加载实时数据...</div>';
+        const [fixturesHtml, standingsHtml] = await Promise.all([
+            fetchFixtures(team.name),
+            fetchStandings(team.leagueId, team.league)
+        ]);
+        container.innerHTML = fixturesHtml + standingsHtml;
+    }
+
+    // ==================== 主搜索函数 ====================
+    async function displayResults(keyword) {
+        const resultArea = document.getElementById('resultArea');
+        const matchedTeams = smartSearch(keyword);
+        const keywords = keyword.trim().toLowerCase().split(/\s+/).filter(k => k.length > 0);
+        
+        if (matchedTeams.length === 0) {
+            resultArea.innerHTML = `<div class="no-result">🤔 没有找到 "${escapeHtml(keyword)}" 的相关球队</div>`;
+            return;
+        }
+        
+        resultArea.innerHTML = '<div id="cards-container"></div>';
+        const container = document.getElementById('cards-container');
+        
+        for (const team of matchedTeams) {
+            const { cardHtml, liveContainerId, team: teamData } = await renderTeamCardWithLiveData(team, keywords);
+            container.insertAdjacentHTML('beforeend', cardHtml);
+            loadLiveDataForTeam(teamData, liveContainerId);
+        }
+    }
+    
+    // ==================== 自动补全 ====================
+    function updateSuggestions(keyword) {
+        const datalist = document.getElementById('teamSuggestions');
+        if (!datalist || !teamsData.length) return;
+        if (!keyword.trim()) {
+            datalist.innerHTML = '';
+            return;
+        }
+        const allSuggestions = new Set();
+        teamsData.forEach(team => {
+            allSuggestions.add(team.name);
+            (team.aliases || []).forEach(alias => allSuggestions.add(alias));
+            (team.players || []).forEach(player => allSuggestions.add(player));
+        });
+        const matched = Array.from(allSuggestions).filter(item => 
+            item.toLowerCase().includes(keyword.trim().toLowerCase())
+        ).slice(0, 10);
+        datalist.innerHTML = matched.map(item => `<option value="${escapeHtml(item)}">`).join('');
+    }
+    
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // 快速按钮（根据当前 teamsData 动态生成）
+    function buildQuickButtons() {
+        const quickContainer = document.getElementById('quickTeams');
+        if (!quickContainer) return;
+        if (!teamsData.length) return;
+        const quickNames = teamsData.slice(0, 6).map(t => t.name);
+        quickContainer.innerHTML = quickNames.map(name => `<button class="quick-btn" data-team="${name}">${name}</button>`).join('');
+        document.querySelectorAll('.quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const teamName = btn.getAttribute('data-team');
+                document.getElementById('teamInput').value = teamName;
+                displayResults(teamName);
+            });
+        });
+    }
+    
+    // 页面初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchBtn = document.getElementById('searchBtn');
+        const teamInput = document.getElementById('teamInput');
+        
+        searchBtn.addEventListener('click', () => displayResults(teamInput.value));
+        teamInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') displayResults(teamInput.value);
+        });
+        teamInput.addEventListener('input', (e) => updateSuggestions(e.target.value));
+        
+        // 开始加载数据
+        loadData();
+    });
+</script>
+</body>
+</html>

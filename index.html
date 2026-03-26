@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纸鸢 · 个人博客</title>
+    <!-- 柔和优雅的字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 免费图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #faf8f5;   /* 暖白底 */
+            color: #2c2b28;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            line-height: 1.7;
+            padding: 2rem 1.5rem;
+        }
+
+        .blog-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(2px);
+            border-radius: 3rem 3rem 2rem 2rem;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 页头区域 */
+        .blog-header {
+            padding: 4rem 3rem 1.5rem 3rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .blog-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 10vw, 4.5rem);
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            color: #3d3a35;
+            margin-bottom: 0.5rem;
+        }
+
+        .blog-title i {
+            color: #c17b5c;  /* 陶土色 */
+            font-size: 0.9em;
+            margin-right: 0.2rem;
+        }
+
+        .blog-subhead {
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: #7a6f64;
+            margin-left: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .blog-subhead span {
+            border-left: 2px solid #e1cfc0;
+            padding-left: 1rem;
+            font-style: italic;
+        }
+
+        /* 导航 */
+        .blog-nav {
+            display: flex;
+            gap: 2.5rem;
+            padding: 1.8rem 3rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 400;
+            color: #5b554e;
+        }
+
+        .blog-nav a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+            border-bottom: 2px solid transparent;
+            padding-bottom: 0.25rem;
+        }
+
+        .blog-nav a:hover {
+            color: #b45f4a;
+            border-bottom-color: #e4b5a2;
+        }
+
+        .blog-nav a i {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        /* 网格布局 — 左main + 右aside */
+        .blog-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2.5rem;
+            padding: 3rem;
+        }
+
+        /* 文章卡片 */
+        .post-card {
+            background: white;
+            border-radius: 2rem;
+            padding: 2.2rem 2rem 2rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.02);
+            transition: box-shadow 0.3s ease, transform 0.2s;
+            border: 1px solid #f1ebe6;
+        }
+
+        .post-card:hover {
+            box-shadow: 0 18px 36px -12px rgba(94, 73, 62, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: #9f9186;
+            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
+            letter-spacing: 0.3px;
+        }
+
+        .post-meta i {
+            color: #cfa392;
+            width: 1.2rem;
+        }
+
+        .post-meta .date {
+            margin-right: auto;
+        }
+
+        .post-meta .tag {
+            background: #f2e9e2;
+            padding: 0.2rem 1rem;
+            border-radius: 30px;
+            color: #7f5d4e;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .post-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 500;
+            line-height: 1.3;
+            margin-bottom: 1rem;
+            color: #312e2a;
+        }
+
+        .post-title a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .post-title a:hover {
+            color: #b86048;
+        }
+
+        .post-excerpt {
+            color: #4f4a44;
+            margin-bottom: 1.8rem;
+            font-size: 1rem;
+        }
+
+        .read-more {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #a56147;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-bottom: 1.5px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .read-more:hover {
+            border-bottom-color: #dbaa93;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .side-card {
+            background: white;
+            border-radius: 2rem;
+            padding: 2rem 1.8rem;
+            border: 1px solid #efe7e1;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.01);
+        }
+
+        .side-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.7rem;
+            font-weight: 400;
+            color: #423d37;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px dotted #ddd0c5;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 简介卡片 */
+        .profile {
+            text-align: center;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #dfd3ca;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: #a48d7a;
+            box-shadow: 0 8px 0 #cbb6a8;
+            border: 3px solid white;
+        }
+
+        .profile h3 {
+            font-size: 1.6rem;
+            font-family: 'Playfair Display', serif;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-bio {
+            color: #6c6258;
+            margin: 1rem 0 1.2rem;
+            font-size: 0.95rem;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem;
+            font-size: 1.4rem;
+            color: #9a8478;
+            margin-top: 1.2rem;
+        }
+
+        .social-links a {
+            color: inherit;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .social-links a:hover {
+            color: #b45f4a;
+            transform: translateY(-3px);
+        }
+
+        /* 精选文章列表 */
+        .recent-list {
+            list-style: none;
+        }
+
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px dashed #f0e4da;
+        }
+
+        .recent-item:last-child {
+            border-bottom: none;
+        }
+
+        .recent-icon {
+            color: #cfaa99;
+            font-size: 0.9rem;
+            width: 1.8rem;
+            text-align: center;
+        }
+
+        .recent-item a {
+            text-decoration: none;
+            color: #4d443c;
+            font-weight: 400;
+            transition: color 0.2s;
+            flex: 1;
+        }
+
+        .recent-item a:hover {
+            color: #b7583e;
+        }
+
+        .recent-date {
+            font-size: 0.8rem;
+            color: #ab9a8d;
+        }
+
+        /* 标签云 */
+        .tags-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        .tag-item {
+            background: #f2ebe5;
+            color: #695e54;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            border: 1px solid #e1d3c9;
+            transition: all 0.15s;
+        }
+
+        .tag-item:hover {
+            background: #ddcbbc;
+            color: #3e342e;
+            border-color: #b2917e;
+        }
+
+        /* 页脚 */
+        .blog-footer {
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding: 2rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #93897e;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: #7f7166;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover {
+            color: #b45f4a;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 800px) {
+            .blog-grid {
+                grid-template-columns: 1fr;
+                padding: 2rem 1.5rem;
+            }
+
+            .blog-header {
+                padding: 2.5rem 1.5rem 1rem;
+            }
+
+            .blog-nav {
+                padding: 1.2rem 1.5rem;
+                gap: 1.5rem;
+                flex-wrap: wrap;
+            }
+
+            .blog-footer {
+                padding: 1.8rem 1.5rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            .post-title { font-size: 1.8rem; }
+            .blog-title { font-size: 3rem; }
+        }
+
+        /* 装饰分隔 */
+        .divider-dash {
+            width: 60px;
+            height: 2px;
+            background: #e4cfc0;
+            margin: 0.5rem 0 1.2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="blog-wrapper">
+        <!-- 头部 -->
+        <header class="blog-header">
+            <h1 class="blog-title">
+                <i class="fas fa-feather-alt"></i> 纸鸢
+            </h1>
+            <div class="blog-subhead">
+                <span>写下即是放风</span>
+                <span style="border-left: none; padding-left: 0; font-size: 0.9rem; opacity: 0.7;">✧ 思考 · 日常 · 光影</span>
+            </div>
+        </header>
+
+        <!-- 导航 -->
+        <nav class="blog-nav">
+            <a href="#"><i class="fas fa-egg"></i> 首页</a>
+            <a href="#"><i class="fas fa-pencil-alt"></i> 文章</a>
+            <a href="#"><i class="fas fa-images"></i> 胶片</a>
+            <a href="#"><i class="fas fa-compass"></i> 关于</a>
+            <a href="#"><i class="fas fa-search"></i> 搜索</a>
+        </nav>
+
+        <!-- 主要内容网格 -->
+        <div class="blog-grid">
+            <!-- 左侧：文章流 -->
+            <main class="main-content">
+                <!-- 文章1 -->
+                <article class="post-card">
+                    <div class="post-meta">
+                        <i class="far fa-calendar-alt"></i>
+                        <span class="date">2025年3月12日</span>
+                        <span class="tag"><i class="far fa-bookmark"></i> 随笔</span>
+                    </div>
+                    <h2 class="post-title"><a href="#">在春日里，等待一场雨</a></h2>
+                    <p class="post-excerpt">午后光线变得黏稠，窗外的樟树开始摇晃新叶。我想起里尔克说的“你须是忍耐的，怀着爱，停驻”，像泥土等待种子，像这座城市等待迟到的雨季……</p>
+                    <a href="#" class="read-more">继续阅读 <i class="fas fa-arrow-right"></i></a>
+                    <div class="divider-dash" style="margin-top: 1.5rem;"></div>
+                </article>
+
+                <!-- 文章2 带图片隐喻 (只用文字) -->
+                <article class="post-card">
+                    <div class="post-meta">
+                        <i class="far fa-calendar-alt"></i>
+                        <span class="date">2025年3月5日</span>
+                        <span class="tag"><i class="far fa-image"></i> 胶片</span>
+                    </div>
+                    <h2 class="post-title"><a href="#">一卷柯达·半个旧金山</a></h2>
+                    <p class="post-excerpt">翻出去年拍的底片，忽然意识到那些没被数码化的颜色里，藏着雾、陡坡、渔人码头的海腥味。彩色负片特有的橘色基底，像梦的底色……</p>
+                    <a href="#" class="read-more">继续阅读 <i class="fas fa-arrow-right"></i></a>
+                </article>
+
+                <!-- 文章3 -->
+                <article class="post-card">
+                    <div class="post-meta">
+                        <i class="far fa-calendar-alt"></i>
+                        <span class="date">2025年2月22日</span>
+                        <span class="tag"><i class="fas fa-mug-hot"></i> 读书</span>
+                    </div>
+                    <h2 class="post-title"><a href="#">夜读《瓦尔登湖》</a></h2>
+                    <p class="post-excerpt">“我步入丛林，因为我希望谨慎地生活。” 重读梭罗，发现他其实不是隐居，而是极致的专注。今天我们在信息洪流里，或许更需要一片属于自己的湖泊……</p>
+                    <a href="#" class="read-more">继续阅读 <i class="fas fa-arrow-right"></i></a>
+                    <div class="divider-dash" style="margin-top: 1.5rem;"></div>
+                </article>
+
+                <!-- 文章4 -->
+                <article class="post-card">
+                    <div class="post-meta">
+                        <i class="far fa-calendar-alt"></i>
+                        <span class="date">2025年2月14日</span>
+                        <span class="tag"><i class="fas fa-code"></i> 手记</span>
+                    </div>
+                    <h2 class="post-title"><a href="#">CSS 与 织物的纹理</a></h2>
+                    <p class="post-excerpt">最近痴迷于在网页中模仿旧纸和亚麻布的感觉。用轻微的噪点、线性渐变和柔和的阴影，让界面摸起来有温度。今天拆解了一个亚麻纹理的实现……</p>
+                    <a href="#" class="read-more">继续阅读 <i class="fas fa-arrow-right"></i></a>
+                </article>
+            </main>
+
+            <!-- 右侧边栏 -->
+            <aside class="sidebar">
+                <!-- 个人简介卡片 -->
+                <div class="side-card profile">
+                    <div class="avatar">
+                        <i class="fas fa-frog"></i>
+                    </div>
+                    <h3>林 安</h3>
+                    <div class="profile-bio">
+                        自由撰稿人，摄影爱好者。喜欢收集旧书、雨声和瓷器。相信缓慢的事物有更长久的回音。
+                    </div>
+                    <div class="social-links">
+                        <a href="#" aria-label="微博"><i class="fab fa-weibo"></i></a>
+                        <a href="#" aria-label="小红书"><i class="fab fa-goodreads-g"></i></a>
+                        <a href="#" aria-label="github"><i class="fab fa-github"></i></a>
+                        <a href="#" aria-label="豆瓣"><i class="fab fa-envira"></i></a>
+                    </div>
+                </div>
+
+                <!-- 精选文章 -->
+                <div class="side-card">
+                    <h3 class="side-title"><i class="far fa-star" style="margin-right: 0.6rem;"></i> 精选笔记</h3>
+                    <ul class="recent-list">
+                        <li class="recent-item">
+                            <span class="recent-icon"><i class="fas fa-leaf"></i></span>
+                            <a href="#">雨季开始时</a>
+                            <span class="recent-date">03-10</span>
+                        </li>
+                        <li class="recent-item">
+                            <span class="recent-icon"><i class="fas fa-camera-retro"></i></span>
+                            <a href="#">黑白胶卷冲洗笔记</a>
+                            <span class="recent-date">03-02</span>
+                        </li>
+                        <li class="recent-item">
+                            <span class="recent-icon"><i class="fas fa-mug-saucer"></i></span>
+                            <a href="#">三家老城咖啡馆</a>
+                            <span class="recent-date">02-25</span>
+                        </li>
+                        <li class="recent-item">
+                            <span class="recent-icon"><i class="fas fa-tree"></i></span>
+                            <a href="#">植物观察：构树</a>
+                            <span class="recent-date">02-18</span>
+                        </li>
+                        <li class="recent-item">
+                            <span class="recent-icon"><i class="fas fa-paint-brush"></i></span>
+                            <a href="#">色彩与情绪</a>
+                            <span class="recent-date">02-09</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 标签云 + 订阅 -->
+                <div class="side-card">
+                    <h3 class="side-title"><i class="fas fa-tags" style="margin-right: 0.5rem;"></i> 标记</h3>
+                    <div class="tags-cloud">
+                        <a href="#" class="tag-item">摄影</a>
+                        <a href="#" class="tag-item">书评</a>
+                        <a href="#" class="tag-item">随笔</a>
+                        <a href="#" class="tag-item">旅行</a>
+                        <a href="#" class="tag-item">设计</a>
+                        <a href="#" class="tag-item">植物</a>
+                        <a href="#" class="tag-item">城市</a>
+                        <a href="#" class="tag-item">食谱</a>
+                        <a href="#" class="tag-item">诗歌</a>
+                        <a href="#" class="tag-item">胶片</a>
+                        <a href="#" class="tag-item">杂文</a>
+                        <a href="#" class="tag-item">器物</a>
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <h4 style="font-weight: 400; margin-bottom: 0.5rem; color:#5d5349;"><i class="far fa-envelope"></i> 通讯</h4>
+                        <p style="font-size: 0.9rem; color:#7c6f64;">偶尔写信，关于近况与发现。</p>
+                        <div style="display: flex; margin-top: 0.8rem;">
+                            <input type="email" placeholder="你的邮箱" style="flex:1; padding:0.7rem; border:1px solid #dfd3c9; border-radius: 40px 0 0 40px; background: #fffcf9; outline: none;">
+                            <button style="background: #cda392; border: none; color: white; padding:0 1.2rem; border-radius: 0 40px 40px 0; cursor: pointer;"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="blog-footer">
+            <div class="copyright">
+                © 2025 纸鸢 · 由林安编写
+            </div>
+            <div class="footer-links">
+                <a href="#">rss</a>
+                <a href="#">归档</a>
+                <a href="#">隐私</a>
+                <a href="#">colophon</a>
+            </div>
+        </footer>
+    </div>
+    <!-- 极简装饰光标 -->
+    <div style="text-align: center; margin-top: 1rem; color: #cfbeb2; font-size: 0.85rem;">
+        ✦ 缓慢的事物 ✦
+    </div>
+</body>
+</html>
